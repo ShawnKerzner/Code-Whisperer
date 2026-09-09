@@ -1,5 +1,13 @@
+import * as dotenv from 'dotenv'; // imports our API key
+dotenv.config();
 import * as vscode from 'vscode';
 import * as cp from 'child_process';
+import * as fs from 'fs'; // import needed to read the source file
+import Anthropic from '@anthropic-ai/sdk';
+
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
 // activate() runs once, automatically, when VS Code loads our extension.
 // It's job is to register things (commands, listeners) - not to do the real work itself.
@@ -38,8 +46,31 @@ export function activate(context: vscode.ExtensionContext) {
           errorOutput += chunk.toString();
         });
 
-        child.on('exit', (code) => {
+        child.on('exit', async (code) => {
           if(errorOutput) {
+            const sourceCode = fs.readFileSync(filePath, 'utf-8'); // Reads the whole source file when an error is detected
+            const response = await anthropic.messages.create({
+              model: 'claude-sonnet-4-5',
+              max_tokens: 1024,
+              messages: [
+                {
+                  role: 'user',
+                  content: `A users code just crashed. Here is the error:
+                  
+                  ${errorOutput}
+
+                  Here is the full source code of the file that crashed:
+
+                  ${sourceCode}
+
+                  Please explain, in plain English for a beginner:
+                  1. What went wrong
+                  2.Why it happened (the underlying misunderstanding or mistake)
+                  3. A suggested fix, with a short code example`,
+                }
+              ],
+            });
+            console.log(response.content[0].text);
             console.log(`--- CodeWhisperer detected an error in ${filePath} ---`);
             console.log(errorOutput);
           } else {
