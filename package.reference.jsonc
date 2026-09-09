@@ -1,0 +1,75 @@
+// package.reference.jsonc
+// -----------------------------------------------------------------------
+// This is a REFERENCE COPY ONLY — for reading, not for running.
+// Real package.json must stay pure JSON (no comments allowed there,
+// it will break npm/VS Code). Keep this file next to it for learning.
+// -----------------------------------------------------------------------
+
+{
+  // Internal identifier for the extension. Lowercase, no spaces.
+  // Used internally by npm/VS Code — not shown to users.
+  "name": "codewhisperer",
+
+  // Human-readable name — shown in the Extensions view and command palette.
+  "displayName": "CodeWhisperer",
+
+  // Short blurb shown in the Extensions marketplace/view.
+  "description": "Plain-English error explanations",
+
+  // This extension's own version (semver: major.minor.patch).
+  // Not related to VS Code's version.
+  "version": "0.0.1",
+
+  "engines": {
+    // Minimum VS Code version this extension supports.
+    // "^1.85.0" = "1.85.0 or any compatible newer version."
+    "vscode": "^1.85.0"
+  },
+
+  // Entry point: where VS Code looks for the COMPILED JavaScript.
+  // Our source is TypeScript (src/extension.ts), so this points to
+  // where tsc drops the compiled output. Must line up with
+  // "outDir" + "rootDir" in tsconfig.json.
+  "main": "./out/extension.js",
+
+  // List of things that should trigger VS Code to load this extension.
+  // Empty array = fall back to default: activate when a registered
+  // command runs. That's what we want — no need to load until the
+  // dev actually runs "CodeWhisperer: Run File".
+  "activationEvents": [],
+
+  "contributes": {
+    // Tells VS Code "this extension adds command(s) to the command palette."
+    "commands": [
+      {
+        // Internal ID — MUST exactly match the string passed to
+        // vscode.commands.registerCommand(...) in extension.ts.
+        "command": "codewhisperer.runFile",
+
+        // What shows up when someone searches the command palette
+        // (Ctrl+Shift+P).
+        "title": "CodeWhisperer: Run File"
+      }
+    ]
+  },
+
+  "scripts": {
+    // Defines `npm run compile` → runs the TypeScript compiler
+    // using the settings in tsconfig.json.
+    "compile": "tsc -p ./"
+  },
+
+  // Packages only needed during development/build, not at runtime.
+  "devDependencies": {
+    // Type definitions for the VS Code API — lets TypeScript know
+    // what vscode.window, vscode.commands, etc. actually are.
+    "@types/vscode": "^1.85.0",
+
+    // Type definitions for Node.js built-ins (we'll need this soon
+    // for child_process).
+    "@types/node": "^20.0.0",
+
+    // The TypeScript compiler itself.
+    "typescript": "^5.0.0"
+  }
+}

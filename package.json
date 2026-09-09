@@ -1,0 +1,25 @@
+{
+  "name": "codewhisperer",
+  "displayName": "CodeWhisperer",
+  "description": "Plain-English error explanations",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.85.0" },
+  "main": "./out/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "commands": [
+      {
+        "command": "codewhisperer.runFile",
+        "title": "CodeWhisperer: Run File"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}
