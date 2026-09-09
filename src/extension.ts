@@ -70,7 +70,17 @@ export function activate(context: vscode.ExtensionContext) {
                 }
               ],
             });
-            console.log(response.content[0].text);
+
+            const firstBlock = response.content[0];
+            
+            if (firstBlock.type === 'text') {
+              console.log(firstBlock.text) 
+            } else {
+                  console.log('Unexpected response type from Claude:', firstBlock.type);
+                }
+              
+            
+              
             console.log(`--- CodeWhisperer detected an error in ${filePath} ---`);
             console.log(errorOutput);
           } else {
