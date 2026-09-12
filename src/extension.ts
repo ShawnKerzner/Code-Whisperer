@@ -51,6 +51,10 @@ export function activate(context: vscode.ExtensionContext) {
           // for accurate, context-aware explanations.
           const sourceCode = fs.readFileSync(filePath, 'utf-8');
 
+          // Parse the crash line number from the stack trace, for red-highlighting in the display.
+          const lineMatch = errorOutput.match(/:(\d+):\d+\)/);
+          const crashLine = lineMatch ? parseInt(lineMatch[1]) : null;
+
           // Prepend line numbers to every line so Claude's citations are
           // guaranteed accurate, not just inferred from context.
           const numberedSourceCode = sourceCode
@@ -58,8 +62,8 @@ export function activate(context: vscode.ExtensionContext) {
             .map((line, index) => `${index + 1}: ${line}`)
             .join('\n');
 
-          // Ask Claude for a structured (JSON) 3-part beginner explanation:
-          // what broke, why, and how to fix it - each citing line numbers.
+          // Ask Claude for a structured (JSON) beginner explanation:
+          // what broke, why, a fix explanation, and a minimal fix snippet with line range.
           const response = await anthropic.messages.create({
             model: 'claude-sonnet-4-5',
             max_tokens: 1024,
@@ -80,7 +84,9 @@ Respond ONLY with a JSON object (no markdown, no code fences, no extra text) in 
   "whatWentWrong": "plain English explanation of the bug, citing specific line number(s)",
   "whyItHappened": "the underlying misunderstanding or mistake, citing specific line number(s)",
   "suggestedFix": "a short explanation of the fix",
-  "fixedCode": "a corrected version of the relevant code as a plain string"
+  "fixSnippet": "just the corrected lines of code that need to change, as a plain string - not the whole file",
+  "replaceStartLine": the first original line number this snippet replaces (a number, not a string),
+  "replaceEndLine": the last original line number this snippet replaces (a number, not a string)
 }`,
               },
             ],
@@ -102,7 +108,61 @@ Respond ONLY with a JSON object (no markdown, no code fences, no extra text) in 
               console.log('What went wrong:', explanation.whatWentWrong);
               console.log('Why it happened:', explanation.whyItHappened);
               console.log('Suggested fix:', explanation.suggestedFix);
-              console.log('Fixed code:', explanation.fixedCode);
+              console.log('Fix snippet (lines', explanation.replaceStartLine, '-', explanation.replaceEndLine, '):', explanation.fixSnippet);
+
+              // Build the source code as HTML, one div per line, coloring
+              // only the crash line red - everything else stays neutral.
+              const sourceLines = sourceCode.split('\n');
+              const sourceHtml = sourceLines
+                .map((line, index) => {
+                  const lineNumber = index + 1;
+                  const isCrashLine = lineNumber === crashLine;
+                  const color = isCrashLine ? 'red' : 'inherit';
+                  return `<div style="color: ${color};">${lineNumber}: ${escapeHtml(line)}</div>`;
+                })
+                .join('');
+
+              // Blue explanation sections: what went wrong, why, and the fix explanation.
+              const explanationHtml = `
+                <div style="color: #4da6ff; margin-top: 20px;">
+                  <h3>What Went Wrong</h3>
+                  <p>${escapeHtml(explanation.whatWentWrong)}</p>
+                </div>
+                <div style="color: #4da6ff; margin-top: 20px;">
+                  <h3>Why It Happened</h3>
+                  <p>${escapeHtml(explanation.whyItHappened)}</p>
+                </div>
+                <div style="color: #4da6ff; margin-top: 20px;">
+                  <h3>Suggested Fix</h3>
+                  <p>${escapeHtml(explanation.suggestedFix)}</p>
+                </div>
+              `;
+
+              // Green fix snippet - just the corrected lines, labeled with which
+              // original lines they replace, so the student has to locate and apply it.
+              const fixHtml = `
+                <div style="color: #4da6ff; margin-top: 20px;">
+                  <h3>Replace lines ${explanation.replaceStartLine}–${explanation.replaceEndLine} with:</h3>
+                </div>
+                <pre style="color: #33cc33; background-color: rgba(51, 204, 51, 0.1); padding: 10px;">${escapeHtml(explanation.fixSnippet)}</pre>
+              `;
+
+              const panel = vscode.window.createWebviewPanel(
+                'codewhispererExplanation',
+                'CodeWhisperer',
+                vscode.ViewColumn.Beside,
+                {}
+              );
+
+              panel.webview.html = `
+                <html>
+                  <body style="font-family: monospace;">
+                    <div style="white-space: pre;">${sourceHtml}</div>
+                    ${explanationHtml}
+                    ${fixHtml}
+                  </body>
+                </html>
+              `;
             } catch (err) {
               console.log('Failed to parse Claude\'s response as JSON.');
               console.log('Raw response was:', firstBlock.text);
@@ -127,3 +187,12 @@ Respond ONLY with a JSON object (no markdown, no code fences, no extra text) in 
 
 // deactivate() runs when the extension is shut down. Nothing to clean up yet.
 export function deactivate() {}
+
+// Escapes HTML-sensitive characters so code containing < or > displays as
+// literal text instead of being misinterpreted as HTML markup.
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+}

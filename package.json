@@ -3,9 +3,7 @@
   "displayName": "CodeWhisperer",
   "description": "Plain-English error explanations",
   "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.85.0"
-  },
+  "engines": { "vscode": "^1.85.0" },
   "main": "./out/extension.js",
   "activationEvents": [],
   "contributes": {
@@ -14,18 +12,24 @@
         "command": "codewhisperer.runFile",
         "title": "CodeWhisperer: Run File"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "CodeWhisperer",
+      "properties": {
+        "codewhisperer.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your Anthropic API key, used to generate error explanations."
+        }
+      }
+    }
   },
   "scripts": {
     "compile": "tsc -p ./"
   },
   "devDependencies": {
-    "@types/node": "^20.0.0",
     "@types/vscode": "^1.85.0",
+    "@types/node": "^20.0.0",
     "typescript": "^5.0.0"
-  },
-  "dependencies": {
-    "@anthropic-ai/sdk": "^0.124.0",
-    "dotenv": "^17.4.2"
   }
 }
