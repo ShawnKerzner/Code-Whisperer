@@ -37,7 +37,9 @@
     }
   },
   "scripts": {
-    "compile": "tsc -p ./"
+    "compile": "tsc -p ./",
+    "test": "npm run compile && node --test out/test/parsing.test.js"
+
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
