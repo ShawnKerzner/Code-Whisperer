@@ -4,6 +4,7 @@ import { runFile } from './runner';
 import { findCrashLine } from './parsing';
 import { explainError } from './claude';
 import { showExplanationPanel } from './panel';
+import Anthropic from '@anthropic-ai/sdk';
 
 const API_KEY_SECRET = 'codewhisperer.anthropicApiKey';
 
@@ -20,6 +21,12 @@ async function handleRunFile(context: vscode.ExtensionContext) {
   try {
     await runAndExplain(context);
   } catch (err) {
+    if (err instanceof Anthropic.AuthenticationError) {
+      vscode.window.showErrorMessage(
+        'CodeWhisperer: your API key was rejected. Run "CodeWhisperer: Set API Key" to update it.'
+      );
+      return;
+    }
     const message = err instanceof Error ? err.message : String(err);
     vscode.window.showErrorMessage(`CodeWhisperer: ${message}`);
   }
