@@ -13,8 +13,28 @@
       {
         "command": "codewhisperer.runFile",
         "title": "CodeWhisperer: Run File"
+      },
+      {
+        "command": "codewhisperer.setApiKey",
+        "title": "CodeWhisperer: Set API Key"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "CodeWhisperer",
+      "properties": {
+        "codewhisperer.model": {
+          "type": "string",
+          "default": "claude-sonnet-4-5",
+          "description": "Claude model used to explain errors."
+        },
+        "codewhisperer.maxTokens": {
+          "type": "number",
+          "default": 1024,
+          "minimum": 256,
+          "description": "Maximum length of Claude's response, in tokens."
+        }
+      }
+    }
   },
   "scripts": {
     "compile": "tsc -p ./"
@@ -25,7 +45,6 @@
     "typescript": "^5.0.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.125.0",
-    "dotenv": "^17.4.2"
+    "@anthropic-ai/sdk": "^0.125.0"
   }
 }
