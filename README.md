@@ -4,7 +4,7 @@
 
 Built solo during a weekend hackathon at Developers Institute (2nd place, fullstack track), then refactored after a code review.
 
-![CodeWhisperer explaining a crash](docs/screenshot.png)
+![CodeWhisperer explaining a crash](docs/code-whisperer-example-screenshot.png)
 
 ## How It Works
 
